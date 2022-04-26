@@ -15,10 +15,16 @@
 #define SERVER_ADDRESS 2
 
 /**
- * @brief Pinouts
+ * @brief 
+ * 
  * Signal   NODEMCU32-S-pin
  * NSS      GPIO5
  * DIO0     GPIO4
+ * MISO     GPIO19
+ * MOSI     GPIO23
+ * SCK      GPIO18
+ * 3V3		3V3
+ * GND		GND
  */
 
 // Singleton instance of the radio driver
@@ -38,7 +44,8 @@ void setup()
 	if (!manager.init())
 	{
 		Serial.println("init failed");
-		while(true);
+		while (true)
+			;
 	}
 	// Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM (for low power module)
 
