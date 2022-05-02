@@ -56,6 +56,7 @@ void setup()
 	// Message 1: Alice sends Nonce_A to Bob
 	byte nonce_A[crypto_secretbox_NONCEBYTES];
 	randombytes_buf(nonce_A, crypto_secretbox_NONCEBYTES);
+	Serial.printf("Message 1 size: %dbytes.\r\n", sizeof(nonce_A));
 	// Message 2: Bob sends the following to Alice : Nonce_B, MACba(Nonce_A, Nonce_B, id_bob)
 	// Bob creates nonce_B
 	byte nonce_B[crypto_secretbox_NONCEBYTES];
@@ -68,6 +69,7 @@ void setup()
 	// Bob calculates mac_ba from message_ba
 	unsigned char mac_ba[crypto_auth_BYTES];
 	crypto_auth(mac_ba, message_ba, sizeof(message_ba), shared_secret_key);
+	Serial.printf("Message 2 size: %dbytes.\r\n", sizeof(nonce_B)+ sizeof(mac_ba));
 	//Alice verifies Message 2 from Bob
 	if (crypto_auth_verify(mac_ba, message_ba, sizeof(message_ba), shared_secret_key) != 0)
 	{
@@ -82,6 +84,7 @@ void setup()
 	// Alice calculates mac_ab from message_ab
 	unsigned char mac_ab[crypto_auth_BYTES];
 	crypto_auth(mac_ab, message_ab, sizeof(message_ab), shared_secret_key);
+	Serial.printf("Message 3 size: %dbytes.\r\n", sizeof(mac_ab));
 	//Bob verifies Message 3 from Alice
 	if (crypto_auth_verify(mac_ab, message_ab, sizeof(message_ab), shared_secret_key) != 0)
 	{
