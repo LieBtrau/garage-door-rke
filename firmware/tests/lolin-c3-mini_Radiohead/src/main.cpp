@@ -6,6 +6,8 @@
 // Tested on Moteino with RFM69 http://lowpowerlab.com/moteino/
 // Tested on miniWireless with RFM69 www.anarduino.com/miniwireless
 // Tested on Teensy 3.1 with RF69 on PJRC breakout board
+//
+// consumes about 46mA on LOLIN C3-MINI, so on-board LDO is OK, large buffer >=22µF is needed on 3V3 for RF-modules.
 
 #include <RHReliableDatagram.h>
 #include <RH_RF69.h>

@@ -25,3 +25,4 @@ MCU:
 Radio
 * RFM69HW
  * RST must be kept low (unconnected at module)
+ * at least 22uF buffer capacitor is needed on 3V3
