@@ -64,6 +64,12 @@ bool KryptoknightClient::rx_handler(byte *packet, byte packet_length)
             _state = IDLE;
             return false;
         }
+        if(!_mutualAuthentication)
+        {
+            //MAC_AB will not be sent.  The server knows it's talking to the correct client, but not vice versa.
+            _state=IDLE;
+            //return false, because the client doesn't know it's talking to the correct server.
+        }
         return false;
     case WAITING_FOR_MAC_AB:
         _state = IDLE;

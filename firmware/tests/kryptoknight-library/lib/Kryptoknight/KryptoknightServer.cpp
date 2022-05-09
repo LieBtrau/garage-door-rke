@@ -60,11 +60,18 @@ bool KryptoknightServer::rx_handler(byte *packet, byte packet_length)
         }
         // At this point, the server has authenticated the client.
         // For mutual authentication (i.e. the client knows for sure that its talking to the correct server, an extra message is needed.)
-        //  Prepare mac_ab
-        generate_message_ab();
-        crypto_auth(_mac_ab, _message_ab, sizeof(_message_ab), _ssk);
         _state = WAITING_FOR_CLIENT_HELLO;
-        return (_txfunc != nullptr && _txfunc(_mac_ab, sizeof(_mac_ab)));
+        if (_mutualAuthentication)
+        {
+            //  Prepare mac_ab
+            generate_message_ab();
+            crypto_auth(_mac_ab, _message_ab, sizeof(_message_ab), _ssk);
+            return (_txfunc != nullptr && _txfunc(_mac_ab, sizeof(_mac_ab)));
+        }
+        else
+        {
+            return true;
+        }
     default:
         break;
     }

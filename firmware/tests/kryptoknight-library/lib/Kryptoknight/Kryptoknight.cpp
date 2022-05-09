@@ -14,6 +14,11 @@ void Kryptoknight::set_tx_handler(TX_Function txfunc)
     _txfunc = txfunc;
 }
 
+void Kryptoknight::setMutualAuthentication(bool isEnabled)
+{
+    _mutualAuthentication = isEnabled;
+}
+
 /**
  * @brief message_ba which is the concatentation of nonce_A, nonce_B and client_id
  *

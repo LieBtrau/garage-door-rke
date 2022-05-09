@@ -24,7 +24,7 @@ bool clientTx(byte* packet, byte packetlength)
 	Serial.printf("Client sends %dbytes.\r\n", packetlength);
 	if(pserver_2pap->rx_handler(packet, packetlength))
 	{
-		Serial.println("Server authentication ok.");
+		Serial.println("Server: authentication ok.");
 	}
 	return true;
 }
@@ -34,7 +34,7 @@ bool serverTx(byte* packet, byte packetlength)
 	Serial.printf("Server sends %dbytes.\r\n", packetlength);
 	if(pclient_2pap->rx_handler(packet, packetlength))
 	{
-		Serial.println("Client authentication ok.");
+		Serial.println("Client: authentication ok.");
 	}
 	return true;
 }
@@ -68,6 +68,10 @@ void setup()
 	KryptoknightClient client_2pap(id_client, shared_secret_key);
 	client_2pap.set_tx_handler(clientTx);
 	pclient_2pap = &client_2pap;
+
+	//Disable mutual authentication
+	client_2pap.setMutualAuthentication(false);
+	server_2pap.setMutualAuthentication(false);
 
 	//Start authentication
 	client_2pap.startAuthentication();
