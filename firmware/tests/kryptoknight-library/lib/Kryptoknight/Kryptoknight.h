@@ -9,8 +9,8 @@ public:
     typedef bool (*TX_Function)(byte *data, byte length);
     Kryptoknight(byte *shared_secret_key);
     ~Kryptoknight();
-    void set_tx_handler(TX_Function txfunc);
-    virtual bool rx_handler(byte *packet, byte packet_length) = 0;
+    void setTransmitPacketEvent(TX_Function txfunc);
+    virtual bool handleIncomingPacket(byte *packet, byte packet_length) = 0;
     void setMutualAuthentication(bool isEnabled);
 
 protected:

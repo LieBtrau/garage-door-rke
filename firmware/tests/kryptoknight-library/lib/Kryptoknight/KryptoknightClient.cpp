@@ -29,7 +29,7 @@ void KryptoknightClient::startAuthentication()
  * @return true when authentication is successful
  * @return false : authentication busy or failed
  */
-bool KryptoknightClient::rx_handler(byte *packet, byte packet_length)
+bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
 {
     if (protocol_timeout.isExpired())
     {
@@ -50,8 +50,13 @@ bool KryptoknightClient::rx_handler(byte *packet, byte packet_length)
         // Prepare the following message in the protocol
         // Create NONCE_B
         randombytes_buf(_nonce_B, crypto_secretbox_NONCEBYTES);
+
+        //Debug
+        memset(_nonce_B, 0xAA, crypto_secretbox_NONCEBYTES);
+
         // Client calculates mac_ba from message_ba
         generate_message_ba();
+        
         crypto_auth(_mac_ba, _message_ba, sizeof(_message_ba), _ssk);
         // Client sends the following to the server : Nonce_B, MACba(Nonce_A, Nonce_B, id_bob)
         byte message2[sizeof(_nonce_B) + sizeof(_mac_ba)];

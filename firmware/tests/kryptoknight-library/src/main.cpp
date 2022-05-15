@@ -1,3 +1,24 @@
+/**
+ * @file main.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2022-05-13
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+Client sends 4bytes.
+8c a7 2b 00 
+Server sends 24bytes.
+aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa 
+
+Client sends 56bytes.
+aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa 
+a1 85 8a b2 36 7b 54 f9 d4 7b 2f 55 11 0d 52 73 09 91 6b 29 47 4b bf bb 
+2e 60 0b 19 48 0c 0e c4 
+Server: authentication ok.
+ */
+
 #include <Arduino.h>
 #include "KryptoknightClient.h"
 #include "KryptoknightServer.h"
@@ -6,33 +27,38 @@ extern "C"
 #include "bootloader_random.h"
 }
 
-KryptoknightServer* pserver_2pap=nullptr;
-KryptoknightClient* pclient_2pap=nullptr;
+KryptoknightServer *pserver_2pap = nullptr;
+KryptoknightClient *pclient_2pap = nullptr;
 
-uint32_t getEsp32UniqueId()
+void showArray(byte *data, byte len)
 {
-	uint32_t chipId = 0;
-	for (int i = 0; i < 17; i = i + 8)
+	for (int i = 0; i < len; i++)
 	{
-		chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+		Serial.printf("%02x ", data[i]);
+		if((i+1) % 24 == 0)
+		{
+			Serial.println();
+		}
 	}
-	return chipId;
+	Serial.println();
 }
 
-bool clientTx(byte* packet, byte packetlength)
+bool clientTx(byte *packet, byte packetlength)
 {
 	Serial.printf("Client sends %dbytes.\r\n", packetlength);
-	if(pserver_2pap->rx_handler(packet, packetlength))
+	showArray(packet, packetlength);
+	if (pserver_2pap->handleIncomingPacket(packet, packetlength))
 	{
 		Serial.println("Server: authentication ok.");
 	}
 	return true;
 }
 
-bool serverTx(byte* packet, byte packetlength)
+bool serverTx(byte *packet, byte packetlength)
 {
 	Serial.printf("Server sends %dbytes.\r\n", packetlength);
-	if(pclient_2pap->rx_handler(packet, packetlength))
+	showArray(packet, packetlength);
+	if (pclient_2pap->handleIncomingPacket(packet, packetlength))
 	{
 		Serial.println("Client: authentication ok.");
 	}
@@ -41,12 +67,9 @@ bool serverTx(byte* packet, byte packetlength)
 
 void setup()
 {
-	unsigned char shared_secret_key[crypto_auth_KEYBYTES];
-	uint32_t id_client;
 	Serial.begin(115200);
 	Serial.printf("\r\nBuild %s\r\n", __TIMESTAMP__);
 	bootloader_random_enable();
-	Serial.printf("Chip ID: 0x%08x\r\n", getEsp32UniqueId());
 	if (sodium_init() < 0)
 	{
 		/* panic! the library couldn't be initialized; it is not safe to use */
@@ -54,26 +77,29 @@ void setup()
 			;
 	}
 
-	// Define Alice's and Bob's identifications
-	id_client = getEsp32UniqueId();
-	// Generate the shared secret key.  Both parties should have this key before the start of the session.
-	crypto_auth_keygen(shared_secret_key);
+	// Define Bob's identification
+	uint32_t id_client = 0x002ba78c;
+	unsigned char shared_secret_key[crypto_auth_KEYBYTES] =
+		{0xE4, 0xFF, 0x4B, 0x3C, 0x9C, 0x4D, 0x0F, 0xCD, 0xB3, 0x17, 0x8A, 0xA1, 0xE3, 0x51, 0x66, 0xEE,
+		 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7};
+	// // Generate the shared secret key.  Both parties should have this key before the start of the session.
+	// crypto_auth_keygen(shared_secret_key);
 
-	//Init server
+	// Init server
 	KryptoknightServer server_2pap(shared_secret_key);
-	server_2pap.set_tx_handler(serverTx);
+	server_2pap.setTransmitPacketEvent(serverTx);
 	pserver_2pap = &server_2pap;
 
-	//Init client
+	// Init client
 	KryptoknightClient client_2pap(id_client, shared_secret_key);
-	client_2pap.set_tx_handler(clientTx);
+	client_2pap.setTransmitPacketEvent(clientTx);
 	pclient_2pap = &client_2pap;
 
-	//Disable mutual authentication
+	// Disable mutual authentication
 	client_2pap.setMutualAuthentication(false);
 	server_2pap.setMutualAuthentication(false);
 
-	//Start authentication
+	// Start authentication
 	client_2pap.startAuthentication();
 }
 

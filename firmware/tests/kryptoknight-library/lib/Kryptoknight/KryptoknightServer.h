@@ -13,6 +13,6 @@ private:
 public:
     KryptoknightServer(byte* shared_secret_key);
     ~KryptoknightServer();
-    bool rx_handler(byte *packet, byte packet_length);
+    bool handleIncomingPacket(byte *packet, byte packet_length);
 };
 

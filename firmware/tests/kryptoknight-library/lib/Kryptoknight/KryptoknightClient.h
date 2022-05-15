@@ -16,5 +16,5 @@ public:
     KryptoknightClient(uint32_t my_id, byte *shared_secret_key);
     ~KryptoknightClient();
     void startAuthentication();
-    bool rx_handler(byte *packet, byte packet_length);
+    bool handleIncomingPacket(byte *packet, byte packet_length);
 };

@@ -9,7 +9,7 @@ Kryptoknight::~Kryptoknight()
 {
 }
 
-void Kryptoknight::set_tx_handler(TX_Function txfunc)
+void Kryptoknight::setTransmitPacketEvent(TX_Function txfunc)
 {
     _txfunc = txfunc;
 }

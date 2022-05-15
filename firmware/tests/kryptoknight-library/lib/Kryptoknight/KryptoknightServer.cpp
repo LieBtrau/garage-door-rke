@@ -16,11 +16,17 @@ KryptoknightServer::~KryptoknightServer()
  * @return true when authentication is successful
  * @return false : authentication busy or failed
  */
-bool KryptoknightServer::rx_handler(byte *packet, byte packet_length)
+bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
 {
+    if (protocol_timeout.isExpired())
+    {
+        Serial.println("Server Timeout");
+        _state = WAITING_FOR_CLIENT_HELLO;
+    }
     switch (_state)
     {
     case WAITING_FOR_CLIENT_HELLO:
+        Serial.println("WAITING_FOR_CLIENT_HELLO");
         if (packet_length != sizeof(_client_id))
         {
             return false;
@@ -30,15 +36,21 @@ bool KryptoknightServer::rx_handler(byte *packet, byte packet_length)
         memcpy(&_client_id, packet, packet_length);
         // Generate nonce_A
         randombytes_buf(_nonce_A, crypto_secretbox_NONCEBYTES);
+
+        //Debug
+        memset(_nonce_A, 0xAA, crypto_secretbox_NONCEBYTES);
+
         // Send nonce_A
         _state = WAITING_FOR_MAC_BA;
-        if (_txfunc != nullptr && _txfunc(_nonce_A, sizeof(_nonce_A)))
+        if (_txfunc != nullptr && !_txfunc(_nonce_A, sizeof(_nonce_A)))
         {
+            Serial.println("TX-error");
             _state = WAITING_FOR_CLIENT_HELLO;
             return false;
         }
         break;
     case WAITING_FOR_MAC_BA:
+        Serial.println("WAITING_FOR_MAC_BA");
         if (packet_length != sizeof(_nonce_B) + sizeof(_mac_ba))
         {
             Serial.println("MAC_BA format wrong");
