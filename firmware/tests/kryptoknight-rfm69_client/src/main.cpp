@@ -46,6 +46,8 @@ unsigned char shared_secret_key[crypto_auth_KEYBYTES] =
 	 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7};
 KryptoknightClient client_2pap(0x002ba78c, shared_secret_key);
 AsyncDelay timerStartAuthentication;
+int totalCount=0;
+int successCount=0;
 
 uint32_t getEsp32UniqueId()
 {
@@ -103,7 +105,7 @@ void setup()
 	}
 	driver.setFrequency(868.0);
 	driver.setTxPower(0, true);
-	timerStartAuthentication.start(3000, AsyncDelay::MILLIS);
+	timerStartAuthentication.start(2000, AsyncDelay::MILLIS);
 }
 
 void loop()
@@ -112,6 +114,8 @@ void loop()
 	{
 		timerStartAuthentication.restart();
 		client_2pap.startAuthentication();
+		totalCount++;
+		USBSerial.printf("TotalCount: %d, SuccessCount: %d\r\n", totalCount, successCount);
 	}
 	if (driver.available())
 	{
@@ -125,6 +129,7 @@ void loop()
 			if(client_2pap.handleIncomingPacket(buf, len))
 			{
 				USBSerial.println("Authentication successful");
+				successCount++;
 			}
 		}
 		else

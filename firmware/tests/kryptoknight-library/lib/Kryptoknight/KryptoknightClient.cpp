@@ -51,9 +51,6 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
         // Create NONCE_B
         randombytes_buf(_nonce_B, crypto_secretbox_NONCEBYTES);
 
-        //Debug
-        memset(_nonce_B, 0xAA, crypto_secretbox_NONCEBYTES);
-
         // Client calculates mac_ba from message_ba
         generate_message_ba();
         

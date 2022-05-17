@@ -18,7 +18,7 @@ KryptoknightServer::~KryptoknightServer()
  */
 bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
 {
-    if (protocol_timeout.isExpired())
+    if (protocol_timeout.isExpired() && _state != WAITING_FOR_CLIENT_HELLO)
     {
         Serial.println("Server Timeout");
         _state = WAITING_FOR_CLIENT_HELLO;
@@ -36,9 +36,6 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         memcpy(&_client_id, packet, packet_length);
         // Generate nonce_A
         randombytes_buf(_nonce_A, crypto_secretbox_NONCEBYTES);
-
-        //Debug
-        memset(_nonce_A, 0xAA, crypto_secretbox_NONCEBYTES);
 
         // Send nonce_A
         _state = WAITING_FOR_MAC_BA;
