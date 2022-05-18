@@ -42,8 +42,10 @@ void showArray(byte *data, byte len)
 
 bool serverTx(byte *packet, byte packetlength)
 {
+#ifdef VERBOSE
 	Serial.printf("Server sends %dbytes.\r\n", packetlength);
 	showArray(packet, packetlength);
+#endif
 	return driver.send(packet, packetlength) && driver.waitPacketSent(500);
 }
 
@@ -71,7 +73,7 @@ void setup()
 	// Serial.println();
 
 	server_2pap.setTransmitPacketEvent(serverTx);
-	//server_2pap.setMutualAuthentication(false);
+	// server_2pap.setMutualAuthentication(false);
 
 	if (!driver.init())
 	{
@@ -81,6 +83,7 @@ void setup()
 	}
 	driver.setFrequency(868.0);
 	driver.setTxPower(0, true);
+	driver.setModemConfig(RH_RF69::GFSK_Rb2Fd5);
 }
 
 void loop()
@@ -92,8 +95,10 @@ void loop()
 		uint8_t from;
 		if (driver.recv(buf, &len))
 		{
+#ifdef VERBOSE
 			Serial.printf("Server receives %dbytes.\r\n", len);
 			showArray(buf, len);
+#endif
 			if (server_2pap.handleIncomingPacket(buf, len))
 			{
 				Serial.println("Authentication successful");

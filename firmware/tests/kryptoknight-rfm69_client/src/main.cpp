@@ -1,20 +1,20 @@
 /**
  * @file main.cpp
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2022-05-13
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  * 	Client sends 4bytes.
-		8c a7 2b 00 
+		8c a7 2b 00
 	Server sends 24bytes.
-		aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa 
+		aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
 	Client sends 56bytes.
-		aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa 
-		a1 85 8a b2 36 7b 54 f9 d4 7b 2f 55 11 0d 52 73 09 91 6b 29 47 4b bf bb 
-		2e 60 0b 19 48 0c 0e c4 
+		aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
+		a1 85 8a b2 36 7b 54 f9 d4 7b 2f 55 11 0d 52 73 09 91 6b 29 47 4b bf bb
+		2e 60 0b 19 48 0c 0e c4
  */
 #include <Arduino.h>
 #include "SPI.h"
@@ -27,14 +27,14 @@ extern "C"
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * Signal   LOLIN C3-MINI
  * SCK      10
  * MISO     4
  * MOSI     7
  * NSS      6
- * DIO0     2 
+ * DIO0     2
  * 3V3		3V3
  * GND		GND
  */
@@ -46,8 +46,8 @@ unsigned char shared_secret_key[crypto_auth_KEYBYTES] =
 	 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7};
 KryptoknightClient client_2pap(0x002ba78c, shared_secret_key);
 AsyncDelay timerStartAuthentication;
-int totalCount=0;
-int successCount=0;
+int totalCount = 0;
+int successCount = 0;
 
 uint32_t getEsp32UniqueId()
 {
@@ -64,7 +64,7 @@ void showArray(byte *data, byte len)
 	for (int i = 0; i < len; i++)
 	{
 		USBSerial.printf("%02x ", data[i]);
-		if((i+1) % 24 == 0)
+		if ((i + 1) % 24 == 0)
 		{
 			USBSerial.println();
 		}
@@ -74,8 +74,10 @@ void showArray(byte *data, byte len)
 
 bool clientTx(byte *packet, byte packetlength)
 {
+#ifdef VERBOSE
 	USBSerial.printf("Client sends %dbytes.\r\n", packetlength);
 	showArray(packet, packetlength);
+#endif
 	return driver.send(packet, packetlength) && driver.waitPacketSent(500);
 }
 
@@ -95,7 +97,7 @@ void setup()
 	}
 
 	client_2pap.setTransmitPacketEvent(clientTx);
-	//client_2pap.setMutualAuthentication(false);
+	// client_2pap.setMutualAuthentication(false);
 
 	if (!driver.init())
 	{
@@ -105,17 +107,18 @@ void setup()
 	}
 	driver.setFrequency(868.0);
 	driver.setTxPower(0, true);
+	driver.setModemConfig(RH_RF69::GFSK_Rb2Fd5);
 	timerStartAuthentication.start(2000, AsyncDelay::MILLIS);
 }
 
 void loop()
 {
-	if(timerStartAuthentication.isExpired())
+	if (timerStartAuthentication.isExpired())
 	{
 		timerStartAuthentication.restart();
+		USBSerial.printf("TotalCount: %d, FailCount: %d\r\n", totalCount, totalCount - successCount);
 		client_2pap.startAuthentication();
 		totalCount++;
-		USBSerial.printf("TotalCount: %d, SuccessCount: %d\r\n", totalCount, successCount);
 	}
 	if (driver.available())
 	{
@@ -124,9 +127,11 @@ void loop()
 		uint8_t from;
 		if (driver.recv(buf, &len))
 		{
+#ifdef VERBOSE
 			USBSerial.printf("Client receives %dbytes.\r\n", len);
 			showArray(buf, len);
-			if(client_2pap.handleIncomingPacket(buf, len))
+#endif
+			if (client_2pap.handleIncomingPacket(buf, len))
 			{
 				USBSerial.println("Authentication successful");
 				successCount++;

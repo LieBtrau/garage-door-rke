@@ -1,5 +1,7 @@
 #include "KryptoknightServer.h"
 
+#define SP Serial
+
 KryptoknightServer::KryptoknightServer(byte *shared_secret_key) : Kryptoknight(shared_secret_key)
 {
 }
@@ -20,13 +22,17 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
 {
     if (protocol_timeout.isExpired() && _state != WAITING_FOR_CLIENT_HELLO)
     {
-        Serial.println("Server Timeout");
+#ifdef DEBUG
+        SP.println("Server Timeout");
+#endif
         _state = WAITING_FOR_CLIENT_HELLO;
     }
     switch (_state)
     {
     case WAITING_FOR_CLIENT_HELLO:
-        Serial.println("WAITING_FOR_CLIENT_HELLO");
+#ifdef DEBUG
+        SP.println("WAITING_FOR_CLIENT_HELLO");
+#endif
         if (packet_length != sizeof(_client_id))
         {
             return false;
@@ -41,16 +47,22 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         _state = WAITING_FOR_MAC_BA;
         if (_txfunc != nullptr && !_txfunc(_nonce_A, sizeof(_nonce_A)))
         {
-            Serial.println("TX-error");
+#ifdef DEBUG
+            SP.println("TX-error");
+#endif
             _state = WAITING_FOR_CLIENT_HELLO;
             return false;
         }
         break;
     case WAITING_FOR_MAC_BA:
-        Serial.println("WAITING_FOR_MAC_BA");
+#ifdef DEBUG
+        SP.println("WAITING_FOR_MAC_BA");
+#endif
         if (packet_length != sizeof(_nonce_B) + sizeof(_mac_ba))
         {
-            Serial.println("MAC_BA format wrong");
+#ifdef DEBUG
+            SP.println("MAC_BA format wrong");
+#endif
             _state = WAITING_FOR_CLIENT_HELLO;
             return false;
         }
@@ -64,7 +76,9 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         {
             // Message was forged.
             _state = WAITING_FOR_CLIENT_HELLO;
-            Serial.println("Server detects forged message.");
+#ifdef DEBUG
+            SP.println("Server detects forged message.");
+#endif
             return false;
         }
         // At this point, the server has authenticated the client.

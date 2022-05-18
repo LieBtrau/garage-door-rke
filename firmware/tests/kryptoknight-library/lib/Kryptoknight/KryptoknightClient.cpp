@@ -1,5 +1,7 @@
 #include "KryptoknightClient.h"
 
+#define SP USBSerial
+
 KryptoknightClient::KryptoknightClient(uint32_t my_id, byte *shared_secret_key) : Kryptoknight(shared_secret_key)
 {
     _client_id = my_id;
@@ -33,7 +35,9 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
 {
     if (protocol_timeout.isExpired())
     {
-        Serial.println("Client Timeout");
+#ifdef DEBUG
+        SP.println("Client Timeout");
+#endif
         _state = IDLE;
     }
     switch (_state)
@@ -42,7 +46,9 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
         if (packet_length != crypto_secretbox_NONCEBYTES)
         {
             _state = IDLE;
-            Serial.println("Nonce A format wrong");
+#ifdef DEBUG
+            SP.println("Nonce A format wrong");
+#endif
             return false;
         }
         // Store NONCE_A
@@ -53,7 +59,7 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
 
         // Client calculates mac_ba from message_ba
         generate_message_ba();
-        
+
         crypto_auth(_mac_ba, _message_ba, sizeof(_message_ba), _ssk);
         // Client sends the following to the server : Nonce_B, MACba(Nonce_A, Nonce_B, id_bob)
         byte message2[sizeof(_nonce_B) + sizeof(_mac_ba)];
@@ -62,22 +68,26 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
         _state = WAITING_FOR_MAC_AB;
         if (_txfunc == nullptr || !_txfunc(message2, sizeof(message2)))
         {
-            Serial.println("Server doesn't ack message2");
+#ifdef DEBUG
+            SP.println("Server doesn't ack message2");
+#endif
             _state = IDLE;
             return false;
         }
-        if(!_mutualAuthentication)
+        if (!_mutualAuthentication)
         {
-            //MAC_AB will not be sent.  The server knows it's talking to the correct client, but not vice versa.
-            _state=IDLE;
-            //return false, because the client doesn't know it's talking to the correct server.
+            // MAC_AB will not be sent.  The server knows it's talking to the correct client, but not vice versa.
+            _state = IDLE;
+            // return false, because the client doesn't know it's talking to the correct server.
         }
         return false;
     case WAITING_FOR_MAC_AB:
         _state = IDLE;
         if (packet_length != crypto_auth_BYTES)
         {
-            Serial.println("MAC_AB format wrong");
+#ifdef DEBUG
+            SP.println("MAC_AB format wrong");
+#endif
             return false;
         }
         // Store mac_ab
