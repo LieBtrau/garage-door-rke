@@ -16,9 +16,10 @@
  * Remarks:
  * --------
  * 1. If the client doesn't require the server to authenticate, then some air time can be saved.  
- *      Nonce_B is not needed in the third message.
- *      The forth message can be left out.
- * 2. MACab and MACba don't necessarily need to use the same key.  
+ *     - Nonce_B is not needed in the third message.
+ *     - The forth message can be left out.
+ * 2. MACab and MACba don't necessarily need to use the same key.
+ * 3. Instead of a MAC (symmetric encryption), a signature (asymmetric encryption) can be used.
  */
 
 class Kryptoknight
