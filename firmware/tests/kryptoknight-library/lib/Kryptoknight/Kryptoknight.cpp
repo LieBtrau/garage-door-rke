@@ -1,6 +1,6 @@
 #include "Kryptoknight.h"
 
-Kryptoknight::Kryptoknight(byte *shared_secret_key) : _ssk(shared_secret_key)
+Kryptoknight::Kryptoknight()
 {
     protocol_timeout.start(PROTOCOL_TIMEOUT, AsyncDelay::MILLIS);
 }

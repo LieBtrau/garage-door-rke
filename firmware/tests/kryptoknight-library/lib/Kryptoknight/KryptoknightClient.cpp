@@ -2,7 +2,7 @@
 
 #define SP USBSerial
 
-KryptoknightClient::KryptoknightClient(uint32_t my_id, byte *shared_secret_key) : Kryptoknight(shared_secret_key)
+KryptoknightClient::KryptoknightClient(uint32_t my_id, byte *shared_secret_key) : _ssk(shared_secret_key)
 {
     _client_id = my_id;
 }

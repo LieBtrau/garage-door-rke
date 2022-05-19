@@ -11,6 +11,7 @@ private:
         WAITING_FOR_NONCE_A,
         WAITING_FOR_MAC_AB
     } _state = IDLE;
+    byte *_ssk;
 
 public:
     KryptoknightClient(uint32_t my_id, byte *shared_secret_key);

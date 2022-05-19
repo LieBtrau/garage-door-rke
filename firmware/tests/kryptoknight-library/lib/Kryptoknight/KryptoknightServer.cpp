@@ -2,7 +2,7 @@
 
 #define SP Serial
 
-KryptoknightServer::KryptoknightServer(byte *shared_secret_key) : Kryptoknight(shared_secret_key)
+KryptoknightServer::KryptoknightServer()
 {
 }
 
@@ -37,9 +37,14 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         {
             return false;
         }
-        protocol_timeout.restart();
         // Store B (=client_id)
         memcpy(&_client_id, packet, packet_length);
+        //Check if it's a known client
+        if(_getKey==nullptr || (_ssKey=_getKey(_client_id))==nullptr)
+        {
+            return false;
+        }
+        protocol_timeout.restart();
         // Generate nonce_A
         randombytes_buf(_nonce_A, crypto_secretbox_NONCEBYTES);
 
@@ -72,7 +77,7 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         memcpy(_mac_ba, packet + sizeof(_nonce_B), sizeof(_mac_ba));
         // Check if mac_ba is valid
         generate_message_ba();
-        if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba), _ssk) != 0)
+        if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba), _ssKey) != 0)
         {
             // Message was forged.
             _state = WAITING_FOR_CLIENT_HELLO;
@@ -88,7 +93,7 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         {
             //  Prepare mac_ab
             generate_message_ab();
-            crypto_auth(_mac_ab, _message_ab, sizeof(_message_ab), _ssk);
+            crypto_auth(_mac_ab, _message_ab, sizeof(_message_ab), _ssKey);
             return (_txfunc != nullptr && _txfunc(_mac_ab, sizeof(_mac_ab)));
         }
         else
@@ -99,4 +104,9 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         break;
     }
     return false;
+}
+
+void KryptoknightServer::setGetKeyEvent(getKey_Function getKey)
+{
+    _getKey = getKey;
 }

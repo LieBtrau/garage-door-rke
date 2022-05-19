@@ -7,6 +7,7 @@ extern "C"
 #include "bootloader_random.h"
 }
 
+#define VERBOSE
 /**
  * @brief
  *
@@ -22,10 +23,12 @@ extern "C"
 
 RH_RF69 driver(5, 4);
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
-unsigned char shared_secret_key[crypto_auth_KEYBYTES] =
+unsigned char shared_secret_key[1][crypto_auth_KEYBYTES] =
+{
 	{0xE4, 0xFF, 0x4B, 0x3C, 0x9C, 0x4D, 0x0F, 0xCD, 0xB3, 0x17, 0x8A, 0xA1, 0xE3, 0x51, 0x66, 0xEE,
-	 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7};
-KryptoknightServer server_2pap(shared_secret_key);
+	 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7}
+};
+KryptoknightServer server_2pap;
 
 void showArray(byte *data, byte len)
 {
@@ -38,6 +41,19 @@ void showArray(byte *data, byte len)
 		}
 	}
 	Serial.println();
+}
+
+byte* getSharedSecretKey(uint32_t client_id)
+{
+	switch (client_id)
+	{
+	case 0x002ba78c:
+		return shared_secret_key[0];
+	default:
+		Serial.printf("Unkown id: 0x%08lx\n",client_id);
+		Serial.println(client_id, HEX);
+		return nullptr;
+	}
 }
 
 bool serverTx(byte *packet, byte packetlength)
@@ -73,6 +89,7 @@ void setup()
 	// Serial.println();
 
 	server_2pap.setTransmitPacketEvent(serverTx);
+	server_2pap.setGetKeyEvent(getSharedSecretKey);
 	// server_2pap.setMutualAuthentication(false);
 
 	if (!driver.init())
