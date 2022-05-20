@@ -35,7 +35,7 @@ public:
 protected:
     void generate_message_ba();
     void generate_message_ab();
-    const int PROTOCOL_TIMEOUT = 750;
+    const int PROTOCOL_TIMEOUT = 500;
     AsyncDelay protocol_timeout;
     TX_Function _txfunc = nullptr;
     uint32_t _client_id;
