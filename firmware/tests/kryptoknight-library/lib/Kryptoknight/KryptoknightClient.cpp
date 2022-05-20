@@ -54,31 +54,43 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
         // Store NONCE_A
         memcpy(_nonce_A, packet, packet_length);
         // Prepare the following message in the protocol
-        // Create NONCE_B
-        randombytes_buf(_nonce_B, crypto_secretbox_NONCEBYTES);
-
-        // Client calculates mac_ba from message_ba
-        generate_message_ba();
-
-        crypto_auth(_mac_ba, _message_ba, sizeof(_message_ba), _ssk);
-        // Client sends the following to the server : Nonce_B, MACba(Nonce_A, Nonce_B, id_bob)
-        byte message2[sizeof(_nonce_B) + sizeof(_mac_ba)];
-        memcpy(message2, _nonce_B, sizeof(_nonce_B));
-        memcpy(message2 + sizeof(_nonce_B), _mac_ba, sizeof(_mac_ba));
-        _state = WAITING_FOR_MAC_AB;
-        if (_txfunc == nullptr || !_txfunc(message2, sizeof(message2)))
+        if (_mutualAuthentication)
         {
+            // Create NONCE_B
+            randombytes_buf(_nonce_B, crypto_secretbox_NONCEBYTES);
+            // Client calculates mac_ba from message_ba
+            generate_message_ba();
+            crypto_auth(_mac_ba, _message_ba, sizeof(_message_ba), _ssk);
+            // Client sends the following to the server : Nonce_B, MACba(Nonce_A, Nonce_B, id_B)
+            byte message2[sizeof(_nonce_B) + sizeof(_mac_ba)];
+            memcpy(message2, _nonce_B, sizeof(_nonce_B));
+            memcpy(message2 + sizeof(_nonce_B), _mac_ba, sizeof(_mac_ba));
+            _state = WAITING_FOR_MAC_AB;
+            if (_txfunc == nullptr || !_txfunc(message2, sizeof(message2)))
+            {
 #ifdef DEBUG
-            SP.println("Server doesn't ack message2");
+                SP.println("Server doesn't ack message2");
 #endif
-            _state = IDLE;
-            return false;
+                _state = IDLE;
+                return false;
+            }
         }
-        if (!_mutualAuthentication)
+        else
         {
-            // MAC_AB will not be sent.  The server knows it's talking to the correct client, but not vice versa.
+            // NONCE_B not needed
+            generate_message_ba();
+            // Sign MAC
+            crypto_auth(_mac_ba, _message_ba, sizeof(_message_ba) - sizeof(_nonce_B), _ssk);
+            // Client sends the following to the server : MACba(Nonce_A, id_B)
             _state = IDLE;
-            // return false, because the client doesn't know it's talking to the correct server.
+            if (_txfunc == nullptr || !_txfunc(_mac_ba, sizeof(_mac_ba)))
+            {
+#ifdef DEBUG
+                SP.println("Server doesn't ack message2");
+#endif
+                _state = IDLE;
+                return false;
+            }
         }
         return false;
     case WAITING_FOR_MAC_AB:

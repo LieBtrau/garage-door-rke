@@ -25,9 +25,17 @@ void Kryptoknight::setMutualAuthentication(bool isEnabled)
  */
 void Kryptoknight::generate_message_ba()
 {
-    memcpy(_message_ba, _nonce_A, sizeof(_nonce_A));
-    memcpy(_message_ba + sizeof(_nonce_A), _nonce_B, sizeof(_nonce_B));
-    memcpy(_message_ba + sizeof(_nonce_A) + sizeof(_nonce_B), &_client_id, sizeof(_client_id));
+    if (_mutualAuthentication)
+    {
+        memcpy(_message_ba, _nonce_A, sizeof(_nonce_A));
+        memcpy(_message_ba + sizeof(_nonce_A), _nonce_B, sizeof(_nonce_B));
+        memcpy(_message_ba + sizeof(_nonce_A) + sizeof(_nonce_B), &_client_id, sizeof(_client_id));
+    }
+    else
+    {
+        memcpy(_message_ba, _nonce_A, sizeof(_nonce_A));
+        memcpy(_message_ba + sizeof(_nonce_A), &_client_id, sizeof(_client_id));
+    }
 }
 
 void Kryptoknight::generate_message_ab()

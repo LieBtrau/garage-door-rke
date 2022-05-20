@@ -97,7 +97,7 @@ void setup()
 	}
 
 	client_2pap.setTransmitPacketEvent(clientTx);
-	// client_2pap.setMutualAuthentication(false);
+	client_2pap.setMutualAuthentication(false);
 
 	if (!driver.init())
 	{

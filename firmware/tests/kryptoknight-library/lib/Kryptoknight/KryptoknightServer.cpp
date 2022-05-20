@@ -39,8 +39,8 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         }
         // Store B (=client_id)
         memcpy(&_client_id, packet, packet_length);
-        //Check if it's a known client
-        if(_getKey==nullptr || (_ssKey=_getKey(_client_id))==nullptr)
+        // Check if it's a known client
+        if (_getKey == nullptr || (_ssKey = _getKey(_client_id)) == nullptr)
         {
             return false;
         }
@@ -63,28 +63,56 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
 #ifdef DEBUG
         SP.println("WAITING_FOR_MAC_BA");
 #endif
-        if (packet_length != sizeof(_nonce_B) + sizeof(_mac_ba))
+        if (_mutualAuthentication)
         {
+            if (packet_length != sizeof(_nonce_B) + sizeof(_mac_ba))
+            {
 #ifdef DEBUG
-            SP.println("MAC_BA format wrong");
+                SP.println("MAC_BA format wrong");
 #endif
-            _state = WAITING_FOR_CLIENT_HELLO;
-            return false;
+                _state = WAITING_FOR_CLIENT_HELLO;
+                return false;
+            }
+            // Store nonce_B
+            memcpy(_nonce_B, packet, sizeof(_nonce_B));
+            // Store mac_ba
+            memcpy(_mac_ba, packet + sizeof(_nonce_B), sizeof(_mac_ba));
+            // Check if mac_ba is valid
+            generate_message_ba();
+            if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba), _ssKey) != 0)
+            {
+                // Message was forged.
+                _state = WAITING_FOR_CLIENT_HELLO;
+#ifdef DEBUG
+                SP.println("Server detects forged message.");
+#endif
+                return false;
+            }
         }
-        // Store nonce_B
-        memcpy(_nonce_B, packet, sizeof(_nonce_B));
-        // Store mac_ba
-        memcpy(_mac_ba, packet + sizeof(_nonce_B), sizeof(_mac_ba));
-        // Check if mac_ba is valid
-        generate_message_ba();
-        if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba), _ssKey) != 0)
+        else
         {
-            // Message was forged.
-            _state = WAITING_FOR_CLIENT_HELLO;
+            if (packet_length != sizeof(_mac_ba))
+            {
 #ifdef DEBUG
-            SP.println("Server detects forged message.");
+                SP.println("MAC_BA format wrong");
 #endif
-            return false;
+                _state = WAITING_FOR_CLIENT_HELLO;
+                return false;
+            }
+            // Store mac_ba
+            memcpy(_mac_ba, packet, sizeof(_mac_ba));
+            // Check if mac_ba is valid
+            generate_message_ba();
+            if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba)-sizeof(_nonce_B), _ssKey) != 0)
+            {
+                // Message was forged.
+                _state = WAITING_FOR_CLIENT_HELLO;
+#ifdef DEBUG
+                SP.println("Server detects forged message.");
+#endif
+                return false;
+            }
+
         }
         // At this point, the server has authenticated the client.
         // For mutual authentication (i.e. the client knows for sure that its talking to the correct server, an extra message is needed.)

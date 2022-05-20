@@ -90,7 +90,7 @@ void setup()
 
 	server_2pap.setTransmitPacketEvent(serverTx);
 	server_2pap.setGetKeyEvent(getSharedSecretKey);
-	// server_2pap.setMutualAuthentication(false);
+	server_2pap.setMutualAuthentication(false);
 
 	if (!driver.init())
 	{
