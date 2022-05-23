@@ -1,7 +1,7 @@
 #include "KryptoknightClient.h"
 
-#define SP Serial
-#define DEBUG
+#define SP USBSerial
+//#define DEBUG
 
 KryptoknightClient::KryptoknightClient(uint32_t my_id, byte *shared_secret_key, uint32_t server_id) : _ssk(shared_secret_key)
 {
@@ -96,6 +96,9 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
         }
         return false;
     case WAITING_FOR_MAC_AB:
+#ifdef DEBUG
+        SP.println("WAITING_FOR_MAC_AB");
+#endif
         _state = IDLE;
         if (packet_length != crypto_auth_BYTES)
         {
