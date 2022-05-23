@@ -1,10 +1,12 @@
 #include "KryptoknightClient.h"
 
-#define SP USBSerial
+#define SP Serial
+#define DEBUG
 
-KryptoknightClient::KryptoknightClient(uint32_t my_id, byte *shared_secret_key) : _ssk(shared_secret_key)
+KryptoknightClient::KryptoknightClient(uint32_t my_id, byte *shared_secret_key, uint32_t server_id) : _ssk(shared_secret_key)
 {
     _client_id = my_id;
+    _server_id = server_id;
 }
 
 KryptoknightClient::~KryptoknightClient()
@@ -61,7 +63,7 @@ bool KryptoknightClient::handleIncomingPacket(byte *packet, byte packet_length)
             // Client calculates mac_ba from message_ba
             generate_message_ba();
             crypto_auth(_mac_ba, _message_ba, sizeof(_message_ba), _ssk);
-            // Client sends the following to the server : Nonce_B, MACba(Nonce_A, Nonce_B, id_B)
+            // Client sends the following to the server : Nonce_B, MACba
             byte message2[sizeof(_nonce_B) + sizeof(_mac_ba)];
             memcpy(message2, _nonce_B, sizeof(_nonce_B));
             memcpy(message2 + sizeof(_nonce_B), _mac_ba, sizeof(_mac_ba));

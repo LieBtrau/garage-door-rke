@@ -1,9 +1,11 @@
 #include "KryptoknightServer.h"
 
 #define SP Serial
+#define DEBUG
 
-KryptoknightServer::KryptoknightServer()
+KryptoknightServer::KryptoknightServer(uint32_t my_id)
 {
+    _server_id = my_id;
 }
 
 KryptoknightServer::~KryptoknightServer()
@@ -35,13 +37,19 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
 #endif
         if (packet_length != sizeof(_client_id))
         {
+#ifdef DEBUG
+        SP.printf("Wrong packet size: %dbytes\r\n", packet_length);
+#endif
             return false;
         }
         // Store B (=client_id)
         memcpy(&_client_id, packet, packet_length);
         // Check if it's a known client
-        if (_getKey == nullptr || (_ssKey = _getKey(_client_id)) == nullptr)
+        if (_getKey == nullptr || (_tempSsk = _getKey(_client_id)) == nullptr)
         {
+#ifdef DEBUG
+        SP.println("No function defined to retrieve client key.");
+#endif
             return false;
         }
         protocol_timeout.restart();
@@ -79,7 +87,7 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
             memcpy(_mac_ba, packet + sizeof(_nonce_B), sizeof(_mac_ba));
             // Check if mac_ba is valid
             generate_message_ba();
-            if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba), _ssKey) != 0)
+            if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba), _tempSsk) != 0)
             {
                 // Message was forged.
                 _state = WAITING_FOR_CLIENT_HELLO;
@@ -103,7 +111,7 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
             memcpy(_mac_ba, packet, sizeof(_mac_ba));
             // Check if mac_ba is valid
             generate_message_ba();
-            if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba)-sizeof(_nonce_B), _ssKey) != 0)
+            if (crypto_auth_verify(_mac_ba, _message_ba, sizeof(_message_ba) - sizeof(_nonce_B), _tempSsk) != 0)
             {
                 // Message was forged.
                 _state = WAITING_FOR_CLIENT_HELLO;
@@ -112,7 +120,6 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
 #endif
                 return false;
             }
-
         }
         // At this point, the server has authenticated the client.
         // For mutual authentication (i.e. the client knows for sure that its talking to the correct server, an extra message is needed.)
@@ -121,7 +128,7 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
         {
             //  Prepare mac_ab
             generate_message_ab();
-            crypto_auth(_mac_ab, _message_ab, sizeof(_message_ab), _ssKey);
+            crypto_auth(_mac_ab, _message_ab, sizeof(_message_ab), _tempSsk);
             return (_txfunc != nullptr && _txfunc(_mac_ab, sizeof(_mac_ab)));
         }
         else

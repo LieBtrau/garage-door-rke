@@ -4,12 +4,14 @@
 #include "sodium.h"
 
 /**
- * @brief 2PAP Authentication protocol
- * Client                                                                       Server
- * -------------------                                                          ------------------------ 
- *                          -> client_id ->                                     WAITING_FOR_CLIENT_HELLO
+ * @brief Authentication protocol
+ * see Computer Networks, 4th Edition, A.S. Tanenbaum, ISBN 0-13-038488-7
+ * ----------------------------------------------------------------------
+ * Client                                                                                   Server
+ * -------------------                                                                      ------------------------ 
+ *                          -> client_id ->                                                 WAITING_FOR_CLIENT_HELLO
  * WAITING_FOR_NONCE_A      <- nonce_A   <-    
- *                          -> Nonce_B, MACba(Nonce_A, Nonce_B, client_id) ->   WAITING_FOR_MAC_BA
+ *                          -> Nonce_B, MACba(Nonce_A, Nonce_B, client_id, server_id) ->    WAITING_FOR_MAC_BA
  * WAITING_FOR_MAC_AB       <- MACab(Nonce_A, Nonce_B) <-
  * 
  * 
@@ -39,11 +41,12 @@ protected:
     AsyncDelay protocol_timeout;
     TX_Function _txfunc = nullptr;
     uint32_t _client_id;
+    uint32_t _server_id;
     byte _nonce_A[crypto_secretbox_NONCEBYTES] = {0};
     byte _nonce_B[crypto_secretbox_NONCEBYTES] = {0};
     byte _mac_ba[crypto_auth_BYTES] = {0};
     byte _mac_ab[crypto_auth_BYTES] = {0};
-    byte _message_ba[sizeof(_nonce_A) + sizeof(_nonce_B) + sizeof(_client_id)] = {0};
+    byte _message_ba[sizeof(_nonce_A) + sizeof(_nonce_B) + sizeof(_server_id) + sizeof(_client_id)] = {0};
     byte _message_ab[sizeof(_nonce_A) + sizeof(_nonce_B)] = {0};
     bool _mutualAuthentication = true;
 

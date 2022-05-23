@@ -28,7 +28,18 @@ unsigned char shared_secret_key[1][crypto_auth_KEYBYTES] =
 	{0xE4, 0xFF, 0x4B, 0x3C, 0x9C, 0x4D, 0x0F, 0xCD, 0xB3, 0x17, 0x8A, 0xA1, 0xE3, 0x51, 0x66, 0xEE,
 	 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7}
 };
-KryptoknightServer server_2pap;
+KryptoknightServer server_2pap(0x00697960);
+
+uint32_t getEsp32UniqueId()
+{
+	uint32_t chipId = 0;
+	for (int i = 0; i < 17; i = i + 8)
+	{
+		chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+	}
+	return chipId;
+}
+
 
 void showArray(byte *data, byte len)
 {
@@ -72,6 +83,7 @@ void setup()
 	while (!Serial)
 		;
 	Serial.printf("\r\nBuild %s\r\n", __TIMESTAMP__);
+	Serial.printf("Chip ID: 0x%08x\r\n", getEsp32UniqueId());
 	bootloader_random_enable();
 	if (sodium_init() < 0)
 	{
@@ -90,7 +102,7 @@ void setup()
 
 	server_2pap.setTransmitPacketEvent(serverTx);
 	server_2pap.setGetKeyEvent(getSharedSecretKey);
-	server_2pap.setMutualAuthentication(false);
+	//server_2pap.setMutualAuthentication(false);
 
 	if (!driver.init())
 	{
@@ -101,6 +113,7 @@ void setup()
 	driver.setFrequency(868.0);
 	driver.setTxPower(0, true);
 	driver.setModemConfig(RH_RF69::GFSK_Rb2Fd5);
+	Serial.println("Ready to rumble");
 }
 
 void loop()

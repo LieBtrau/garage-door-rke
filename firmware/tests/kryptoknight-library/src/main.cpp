@@ -27,17 +27,25 @@ extern "C"
 #include "bootloader_random.h"
 }
 
+const uint32_t CLIENT_ID0 = 0x002ba78c;
+const uint32_t SERVER_ID = 0x00697960;
 KryptoknightServer *pserver_2pap = nullptr;
 KryptoknightClient *pclient_2pap = nullptr;
+unsigned char shared_secret_key[1][crypto_auth_KEYBYTES] =
+{
+	{0xE4, 0xFF, 0x4B, 0x3C, 0x9C, 0x4D, 0x0F, 0xCD, 0xB3, 0x17, 0x8A, 0xA1, 0xE3, 0x51, 0x66, 0xEE,
+	 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7}
+};
 
 void showArray(byte *data, byte len)
 {
+	Serial.print("\t");
 	for (int i = 0; i < len; i++)
 	{
 		Serial.printf("%02x ", data[i]);
 		if((i+1) % 24 == 0)
 		{
-			Serial.println();
+			Serial.print("\r\n\t");
 		}
 	}
 	Serial.println();
@@ -65,6 +73,19 @@ bool serverTx(byte *packet, byte packetlength)
 	return true;
 }
 
+byte* getSharedSecretKey(uint32_t client_id)
+{
+	switch (client_id)
+	{
+	case CLIENT_ID0:
+		return shared_secret_key[0];
+	default:
+		Serial.printf("Unkown id: 0x%08lx\n",client_id);
+		Serial.println(client_id, HEX);
+		return nullptr;
+	}
+}
+
 void setup()
 {
 	Serial.begin(115200);
@@ -77,27 +98,23 @@ void setup()
 			;
 	}
 
-	// Define Bob's identification
-	uint32_t id_client = 0x002ba78c;
-	unsigned char shared_secret_key[crypto_auth_KEYBYTES] =
-		{0xE4, 0xFF, 0x4B, 0x3C, 0x9C, 0x4D, 0x0F, 0xCD, 0xB3, 0x17, 0x8A, 0xA1, 0xE3, 0x51, 0x66, 0xEE,
-		 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7};
 	// // Generate the shared secret key.  Both parties should have this key before the start of the session.
 	// crypto_auth_keygen(shared_secret_key);
 
 	// Init server
-	KryptoknightServer server_2pap(shared_secret_key);
+	KryptoknightServer server_2pap(SERVER_ID);
 	server_2pap.setTransmitPacketEvent(serverTx);
+	server_2pap.setGetKeyEvent(getSharedSecretKey);
 	pserver_2pap = &server_2pap;
 
 	// Init client
-	KryptoknightClient client_2pap(id_client, shared_secret_key);
+	KryptoknightClient client_2pap(CLIENT_ID0, shared_secret_key[0], SERVER_ID);
 	client_2pap.setTransmitPacketEvent(clientTx);
 	pclient_2pap = &client_2pap;
 
 	// Disable mutual authentication
-	client_2pap.setMutualAuthentication(false);
-	server_2pap.setMutualAuthentication(false);
+	client_2pap.setMutualAuthentication(true);
+	server_2pap.setMutualAuthentication(true);
 
 	// Start authentication
 	client_2pap.startAuthentication();

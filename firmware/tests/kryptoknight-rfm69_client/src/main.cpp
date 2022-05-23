@@ -7,14 +7,6 @@
  *
  * @copyright Copyright (c) 2022
  *
- * 	Client sends 4bytes.
-		8c a7 2b 00
-	Server sends 24bytes.
-		aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
-	Client sends 56bytes.
-		aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
-		a1 85 8a b2 36 7b 54 f9 d4 7b 2f 55 11 0d 52 73 09 91 6b 29 47 4b bf bb
-		2e 60 0b 19 48 0c 0e c4
  */
 #include <Arduino.h>
 #include "SPI.h"
@@ -25,6 +17,8 @@ extern "C"
 {
 #include "bootloader_random.h"
 }
+
+#define VERBOSE
 
 /**
  * @brief
@@ -44,7 +38,7 @@ uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 unsigned char shared_secret_key[crypto_auth_KEYBYTES] =
 	{0xE4, 0xFF, 0x4B, 0x3C, 0x9C, 0x4D, 0x0F, 0xCD, 0xB3, 0x17, 0x8A, 0xA1, 0xE3, 0x51, 0x66, 0xEE,
 	 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7};
-KryptoknightClient client_2pap(0x002ba78c, shared_secret_key);
+KryptoknightClient client_2pap(0x002ba78c, shared_secret_key, 0x00697960);
 AsyncDelay timerStartAuthentication;
 int totalCount = 0;
 int successCount = 0;
@@ -78,7 +72,14 @@ bool clientTx(byte *packet, byte packetlength)
 	USBSerial.printf("Client sends %dbytes.\r\n", packetlength);
 	showArray(packet, packetlength);
 #endif
-	return driver.send(packet, packetlength) && driver.waitPacketSent(500);
+	if (!driver.waitPacketSent(1))
+	{
+#ifdef VERBOSE
+		USBSerial.println("Driver has not finished sending.  Check 3V3 of the radio");
+#endif
+		return false;
+	}
+	return driver.send(packet, packetlength);
 }
 
 void setup()
@@ -97,7 +98,7 @@ void setup()
 	}
 
 	client_2pap.setTransmitPacketEvent(clientTx);
-	client_2pap.setMutualAuthentication(false);
+	//client_2pap.setMutualAuthentication(false);
 
 	if (!driver.init())
 	{
@@ -109,6 +110,7 @@ void setup()
 	driver.setTxPower(0, true);
 	driver.setModemConfig(RH_RF69::GFSK_Rb2Fd5);
 	timerStartAuthentication.start(2000, AsyncDelay::MILLIS);
+	USBSerial.println("Ready to rumble");
 }
 
 void loop()
@@ -120,26 +122,26 @@ void loop()
 		client_2pap.startAuthentication();
 		totalCount++;
 	}
-	if (driver.available())
-	{
-		// Wait for a message addressed to us from the client
-		uint8_t len = sizeof(buf);
-		uint8_t from;
-		if (driver.recv(buf, &len))
+		if (driver.available())
 		{
-#ifdef VERBOSE
-			USBSerial.printf("Client receives %dbytes.\r\n", len);
-			showArray(buf, len);
-#endif
-			if (client_2pap.handleIncomingPacket(buf, len))
+			// Wait for a message addressed to us from the client
+			uint8_t len = sizeof(buf);
+			uint8_t from;
+			if (driver.recv(buf, &len))
 			{
-				USBSerial.println("Authentication successful");
-				successCount++;
+	#ifdef VERBOSE
+				USBSerial.printf("Client receives %dbytes.\r\n", len);
+				showArray(buf, len);
+	#endif
+				if (client_2pap.handleIncomingPacket(buf, len))
+				{
+					USBSerial.println("Authentication successful");
+					successCount++;
+				}
+			}
+			else
+			{
+				USBSerial.println("invalid message");
 			}
 		}
-		else
-		{
-			USBSerial.println("invalid message");
-		}
-	}
 }

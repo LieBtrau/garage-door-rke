@@ -6,7 +6,7 @@ class KryptoknightServer : public Kryptoknight
 {
 public:
     typedef byte* (*getKey_Function)(uint32_t clientId);
-    KryptoknightServer();
+    KryptoknightServer(uint32_t my_id);
     ~KryptoknightServer();
     bool handleIncomingPacket(byte *packet, byte packet_length);
     void setGetKeyEvent(getKey_Function getKey);
@@ -17,6 +17,6 @@ private:
         WAITING_FOR_MAC_BA,
     } _state = WAITING_FOR_CLIENT_HELLO;
     getKey_Function _getKey = nullptr;
-    byte* _ssKey;
+    byte* _tempSsk;
 };
 

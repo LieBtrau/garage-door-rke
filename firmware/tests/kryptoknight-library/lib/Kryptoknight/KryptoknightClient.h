@@ -14,7 +14,7 @@ private:
     byte *_ssk;
 
 public:
-    KryptoknightClient(uint32_t my_id, byte *shared_secret_key);
+    KryptoknightClient(uint32_t my_id, byte *shared_secret_key, uint32_t server_id);
     ~KryptoknightClient();
     void startAuthentication();
     bool handleIncomingPacket(byte *packet, byte packet_length);
