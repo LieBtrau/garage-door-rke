@@ -57,6 +57,7 @@ void setup()
 		return;
 	}
 
+	//Static IP-configuration (leave away when dynamic IP config is desired)
 	IPAddress local_IP(192, 168, 1, 253);
 	IPAddress gateway(192, 168, 1, 1);
 	IPAddress subnet(255, 255, 255, 0);
