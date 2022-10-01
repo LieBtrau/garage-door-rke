@@ -35,3 +35,4 @@ info
 README
 extensions.json
 firmware/tests/webserver-spiffs/include/wifi_cred.h
+/hardware/output
