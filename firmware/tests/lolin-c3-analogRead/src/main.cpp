@@ -10,6 +10,7 @@
  * - analogReadMilliVolts() measurement voltages are all wrong.
  * - esp_adc_cal_get_voltage() is much better, but still 20 to 30mV off.
  * - Use ADC only in 150mV to 2500mV range for highest precision.
+ * - written for ESP-IDF v4.4.0
  */
 #include "Arduino.h"
 #include "esp_adc_cal.h"
@@ -22,19 +23,12 @@ void setup()
 	Serial.begin(115200);
 	while (!Serial)
 		;
+	delay(5000);
+	esp_adc_cal_value_t adc_calibration;
 
-	if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) != ESP_OK)
-	{
-		Serial.println("No reference voltage stored in eFuse");
-	}
-	if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) != ESP_OK)
-	{
-		Serial.println("No characterization based on Two Point values stored in eFuse");
-	}
-	if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_DEFAULT_VREF) != ESP_OK)
-	{
-		Serial.println("No characterization based on default reference voltage stored in eFuse");
-	}
+	//Lolin C3-Mini : ESP_ADC_CAL_VAL_EFUSE_VREF : not supported
+	ESP_ERROR_CHECK(esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP));
+
 	// set the resolution to 12 bits (0-4095)
 	analogReadResolution(12);
 
