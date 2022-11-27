@@ -10,8 +10,12 @@
 #include <SPI.h> // include libraries
 #include <LoRa.h>
 
+const int PIN_EN_PWR=4;
+
 void setup()
 {
+  pinMode(PIN_EN_PWR, OUTPUT);
+  digitalWrite(PIN_EN_PWR, HIGH);
   Serial.begin(115200); // initialize serial
   while (!Serial)
     ;
