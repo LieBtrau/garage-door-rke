@@ -17,6 +17,9 @@ void onReceive(int packetSize);
 
 void setup()
 {
+  pinMode(pinEn_Pwr, OUTPUT);
+  digitalWrite(pinEn_Pwr, HIGH);
+
   Serial.begin(115200); // initialize serial
   while (!Serial)
     ;
@@ -26,7 +29,7 @@ void setup()
   LoRa.setPins(pinnCS, pinRST_RADIO, pinDIO0, pinSCK, pinMOSI, pinMISO);
 
   if (!LoRa.begin(868E6))
-  { // initialize ratio at 915 MHz
+  {
     Serial.println("LoRa init failed. Check your connections.");
     delay(1000);
     while (true)
