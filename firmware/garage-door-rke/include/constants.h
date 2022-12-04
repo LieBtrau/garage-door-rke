@@ -4,6 +4,8 @@
 #include "sodium.h"
 #include <LoRa.h>
 
+#define DEBUG
+
 //Application layer : Kryptoknight
 const uint32_t SERVER_ID = 0x00697960;
 typedef struct

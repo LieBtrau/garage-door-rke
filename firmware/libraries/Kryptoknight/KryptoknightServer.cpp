@@ -1,7 +1,7 @@
 #include "KryptoknightServer.h"
 
 #define SP Serial
-//#define DEBUG
+#define DEBUG
 
 KryptoknightServer::KryptoknightServer(uint32_t my_id)
 {
