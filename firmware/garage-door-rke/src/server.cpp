@@ -21,7 +21,6 @@ byte *getSharedSecretKey(uint32_t client_id)
         }
     }
     Serial.printf("Unkown id: 0x%08lx\n", client_id);
-    Serial.println(client_id, HEX);
     return nullptr;
 }
 
@@ -37,7 +36,6 @@ bool setupKryptoKnight()
 
     server_2pap.setTransmitPacketEvent(radioTx);
     server_2pap.setGetKeyEvent(getSharedSecretKey);
-    // server_2pap.setMutualAuthentication(false);
     return true;
 }
 
@@ -48,13 +46,13 @@ void onReceive(int packetSize)
 
     if (LoRa.readBytes(buf, min(packetSize,BUFF_SIZE)) == packetSize)
     {
-#ifdef VERBOSE
-        USBSerial.printf("Client receives %dbytes.\r\n", len);
-        showArray(buf, len);
+#ifdef DEBUG        
+        Serial.printf("Device receives %dbytes.\r\n", packetSize);
+        showArray(buf, packetSize);
 #endif
         if (server_2pap.handleIncomingPacket(buf, packetSize))
         {
-            Serial.println("Authentication successful");
+            Serial.println("Server : Authentication successful");
         }
     }
     else
@@ -65,7 +63,7 @@ void onReceive(int packetSize)
 
 void loop()
 {
-
+    onReceive(LoRa.parsePacket());
 }
 
 #endif

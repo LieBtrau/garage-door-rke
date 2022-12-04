@@ -17,17 +17,6 @@ bool setupKryptoKnight()
     return true;
 }
 
-void loop()
-{
-    if (timerStartAuthentication.isExpired())
-    {
-        timerStartAuthentication.restart();
-        Serial.printf("TotalCount: %d, FailCount: %d\r\n", totalCount, totalCount - successCount);
-        client_2pap.startAuthentication();
-        totalCount++;
-    }
-}
-
 void onReceive(int packetSize)
 {
     if (packetSize == 0)
@@ -35,9 +24,9 @@ void onReceive(int packetSize)
 
     if (LoRa.readBytes(buf, min(packetSize,BUFF_SIZE)) == packetSize)
     {
-#ifdef VERBOSE
-        USBSerial.printf("Client receives %dbytes.\r\n", len);
-        showArray(buf, len);
+#ifdef DEBUG
+        Serial.printf("Client receives %dbytes.\r\n", packetSize);
+        showArray(buf, packetSize);
 #endif
         if (client_2pap.handleIncomingPacket(buf, packetSize))
         {
@@ -49,6 +38,18 @@ void onReceive(int packetSize)
     {
         Serial.println("invalid message");
     }
+}
+
+void loop()
+{
+    if (timerStartAuthentication.isExpired())
+    {
+        timerStartAuthentication.restart();
+        Serial.printf("TotalCount: %d, FailCount: %d\r\n", totalCount, totalCount - successCount);
+        client_2pap.startAuthentication();
+        totalCount++;
+    }
+    onReceive(LoRa.parsePacket());
 }
 
 #endif

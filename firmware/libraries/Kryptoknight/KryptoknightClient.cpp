@@ -1,6 +1,6 @@
 #include "KryptoknightClient.h"
 
-#define SP USBSerial
+#define SP Serial
 //#define DEBUG
 
 KryptoknightClient::KryptoknightClient(uint32_t my_id, byte *shared_secret_key, uint32_t server_id) : _ssk(shared_secret_key)

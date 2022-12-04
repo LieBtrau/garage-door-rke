@@ -1,7 +1,7 @@
 #include "KryptoknightServer.h"
 
 #define SP Serial
-#define DEBUG
+//#define DEBUG
 
 KryptoknightServer::KryptoknightServer(uint32_t my_id)
 {
@@ -25,7 +25,7 @@ bool KryptoknightServer::handleIncomingPacket(byte *packet, byte packet_length)
     if (protocol_timeout.isExpired() && _state != WAITING_FOR_CLIENT_HELLO)
     {
 #ifdef DEBUG
-        SP.println("Server Timeout");
+        SP.println("Server Timeout, restart protocol sequence");
 #endif
         _state = WAITING_FOR_CLIENT_HELLO;
     }

@@ -15,4 +15,5 @@ typedef struct
 const int BUFF_SIZE = 128;
 bool radioTx(byte *packet, byte packetlength);
 bool setupKryptoKnight();
+void showArray(byte *data, byte len);
 void loop();

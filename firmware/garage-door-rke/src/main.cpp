@@ -15,15 +15,27 @@ void onReceive(int packetSize);
 
 bool radioTx(byte *packet, byte packetlength)
 {
-#ifdef VERBOSE
+#ifdef DEBUG
   Serial.printf("Device sends %dbytes.\r\n", packetlength);
   showArray(packet, packetlength);
 #endif
   LoRa.beginPacket();
   LoRa.write(packet, packetlength);
   LoRa.endPacket();
-  LoRa.receive(); // go back into receive mode
   return true;
+}
+
+void showArray(byte *data, byte len)
+{
+  for (int i = 0; i < len; i++)
+  {
+    Serial.printf("%02x ", data[i]);
+    if ((i + 1) % 24 == 0)
+    {
+      Serial.println();
+    }
+  }
+  Serial.println();
 }
 
 void setup()
@@ -47,10 +59,6 @@ void setup()
       delay(1000);
     }
   }
-
-  LoRa.onReceive(onReceive);
-  LoRa.receive();
-
   // Init Kryptoknight
   bootloader_random_enable();
   if (sodium_init() < 0 || !setupKryptoKnight())

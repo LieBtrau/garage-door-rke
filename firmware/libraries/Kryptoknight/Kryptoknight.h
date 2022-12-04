@@ -7,11 +7,11 @@
  * @brief Authentication protocol
  * see Computer Networks, 4th Edition, A.S. Tanenbaum, ISBN 0-13-038488-7
  * ----------------------------------------------------------------------
- * Client                                                                                   Server
- * -------------------                                                                      ------------------------ 
- *                          -> client_id ->                                                 WAITING_FOR_CLIENT_HELLO
- * WAITING_FOR_NONCE_A      <- nonce_A   <-    
- *                          -> Nonce_B, MACba(Nonce_A, Nonce_B, client_id, server_id) ->    WAITING_FOR_MAC_BA
+ * Client                                                                                               Server
+ * -------------------                                                                                  ------------------------ 
+ *                          -> client_id (4 bytes)->                                                    WAITING_FOR_CLIENT_HELLO
+ * WAITING_FOR_NONCE_A      <- nonce_A  (24 bytes) <-    
+ *                          -> Nonce_B, MACba(Nonce_A, Nonce_B, client_id, server_id) (32 bytes) ->     WAITING_FOR_MAC_BA
  * WAITING_FOR_MAC_AB       <- MACab(Nonce_A, Nonce_B) <-
  * 
  * 
