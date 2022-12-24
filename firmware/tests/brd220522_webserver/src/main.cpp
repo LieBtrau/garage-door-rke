@@ -7,20 +7,13 @@
  * a HTTP-POST message.  The server checks the pin code and send a dynamically generated webpage (door.html) back to the client.
  */
 
-// Import required libraries
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "SPIFFS.h"
 #include "wifi_credentials.h"
 
-// Set LED GPIO
-const int ledPin = 2;
-// Stores LED state
-String ledState;
 bool isAccessGranted=false;
-
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
+AsyncWebServer server(80);  // server on port 80
 
 String processor(const String &var)
 {
@@ -32,6 +25,11 @@ String processor(const String &var)
   return String();
 }
 
+/**
+ * @brief Parse HTTP-POST message
+ * Iterate over the posted parameters.  Check if the pin code is correct.  Send back an appropriate HTML-page.
+ * @param request 
+ */
 void action(AsyncWebServerRequest *request)
 {
   int params = request->params();
@@ -48,17 +46,12 @@ void action(AsyncWebServerRequest *request)
 
 void setup()
 {
-  // Serial port for debugging purposes
   Serial.begin(115200);
-  pinMode(ledPin, OUTPUT);
-
-  // Initialize SPIFFS
   if (!SPIFFS.begin(true))
   {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-
   // Configures static IP address
   IPAddress local_IP(192, 168, 1, 253); // Set your Static IP address
   IPAddress gateway(192, 168, 1, 1);    // Set your Gateway IP address
@@ -67,23 +60,18 @@ void setup()
   {
     Serial.println("STA Failed to configure");
   }
-  // Connect to Wi-Fi
   WiFi.begin(SSID, PASSWORD);
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
-
-  // Print ESP32 Local IP Address
-  Serial.println(WiFi.localIP());
-
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/pin_form.html", String(), false); });
 
   server.on("/login", HTTP_POST, action);
-  server.begin(); // Start server
+  server.begin();
 }
 
 void loop()
