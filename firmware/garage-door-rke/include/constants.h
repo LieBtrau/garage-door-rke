@@ -19,3 +19,5 @@ bool radioTx(byte *packet, byte packetlength);
 bool setupKryptoKnight();
 void showArray(byte *data, byte len);
 void loop();
+
+bool webserver_setup();

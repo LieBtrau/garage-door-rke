@@ -7,13 +7,15 @@
  * a HTTP-POST message.  The server checks the pin code and send a dynamically generated webpage (door.html) back to the client.
  */
 
+#if REMOTE == 0   //only the garage door controller has a web interface
+
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "SPIFFS.h"
 #include "wifi_credentials.h"
 
-bool isAccessGranted=false;
-AsyncWebServer server(80);  // server on port 80
+static bool isAccessGranted=false;
+static AsyncWebServer server(80);  // server on port 80
 
 /**
  * @brief Replace placeholder with the desired string
@@ -21,7 +23,7 @@ AsyncWebServer server(80);  // server on port 80
  * @param var placeholder string to be replaced
  * @return String 
  */
-String processor(const String &var)
+static String processor(const String &var)
 {
   Serial.println(var);
   if (var == "DOOR_STATE")
@@ -36,7 +38,7 @@ String processor(const String &var)
  * Iterate over the posted parameters.  Check if the pin code is correct.  Send back an appropriate HTML-page.
  * @param request 
  */
-void action(AsyncWebServerRequest *request)
+static void action(AsyncWebServerRequest *request)
 {
   int params = request->params();
   for (int i = 0; i < params; i++)
@@ -50,13 +52,13 @@ void action(AsyncWebServerRequest *request)
   request->send(SPIFFS, "/door.html", String(), false, processor);
 }
 
-void setup()
+bool webserver_setup()
 {
   Serial.begin(115200);
   if (!SPIFFS.begin(true))
   {
     Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
+    return false;
   }
   // Configures static IP address
   IPAddress local_IP(192, 168, 1, 253); // Set your Static IP address
@@ -65,6 +67,7 @@ void setup()
   if (!WiFi.config(local_IP, gateway, subnet))
   {
     Serial.println("STA Failed to configure");
+    return false;
   }
   WiFi.begin(SSID, PASSWORD);
   while (WiFi.status() != WL_CONNECTED)
@@ -78,8 +81,7 @@ void setup()
 
   server.on("/login", HTTP_POST, action);
   server.begin();
+  return true;
 }
 
-void loop()
-{
-}
+#endif

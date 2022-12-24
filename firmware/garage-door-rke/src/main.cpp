@@ -69,6 +69,17 @@ void setup()
       delay(1000);
     }
   }
+  #if REMOTE == 0
+  //Init web server : for garage-controller only
+  if(!webserver_setup())
+  {
+    while(true)
+    {
+      Serial.println("Web server init failed.");
+      delay(1000);
+    }
+  }
+  #endif
 
   Serial.println("Ready to rumble.");
 }
