@@ -47,19 +47,33 @@ void postsetup()
 
     // Get ADC-calibration data
     ESP_ERROR_CHECK(esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP));
-    Serial.println(esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_6, ADC_WIDTH_BIT_12, 0, &adc_chars), DEC);
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_6, ADC_WIDTH_BIT_12, 0, &adc_chars);
     // Configure the ADC with the calibration data
-    adc1_config_channel_atten(ADC1_CHANNEL_1, ADC_ATTEN_DB_6);
+    adc1_config_channel_atten(ADC1_CHANNEL_3, ADC_ATTEN_DB_6);
+    // Give voltage some time to stabilize
+    delay(25);
     // Do the ADC-measurement
-    if (esp_adc_cal_get_voltage(ADC_CHANNEL_1, &adc_chars, &voltage) == ESP_OK)
+    int voltage_sum = 0;
+
+    //Average the voltage over a number of ADC-samples
+    const int SAMPLE_COUNT = 10;
+    for (int i = 0; i < SAMPLE_COUNT; i++)
     {
-        Serial.printf("ESP-IDF : ADC analog value = %dmV\n", voltage);
-        int battery_voltage = voltage / R5 * (R5 + R6);
-        if (battery_voltage < MIN_BAT_VOLTAGE)
+        if (esp_adc_cal_get_voltage(ADC_CHANNEL_3, &adc_chars, &voltage) == ESP_OK)
         {
-            digitalWrite(pinRedLED, HIGH);
+            voltage_sum += voltage;
         }
     }
+    double average = voltage_sum / SAMPLE_COUNT;
+    
+    int battery_voltage = average * (R5 + R6) / R5;
+    Serial.printf("sampled battery voltage = %dmV\n", battery_voltage);
+    if (battery_voltage < MIN_BAT_VOLTAGE)
+    {
+        digitalWrite(pinRedLED, HIGH);
+    }
+
+    //Disable ADC to save some power
     digitalWrite(pinEn_ADC, LOW);
 }
 
