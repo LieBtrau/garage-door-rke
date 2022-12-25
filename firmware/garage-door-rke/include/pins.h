@@ -15,8 +15,8 @@ const int pinRST_RADIO = 3;
 const int pinSampleADC = 1;
 const int pinEn_ADC = 0;
 
-const int pinRedLED = 5;
-const int pinEn_Pwr = 4;
+const int pinRedLED = 5;    // LoBatt indicator on remote, garage-door pulse on controller
+const int pinEn_Pwr = 4;    // Enable power on remote, no function on controller
 
 #elif BRD220522_VERSION == 2
 //SPI - signals
@@ -33,7 +33,7 @@ const int pinRST_RADIO = 8;
 const int pinSampleADC = 3;
 const int pinEn_ADC = 10;
 
-const int pinRedLED = 4;
+const int pinRedLED = 4;    // LoBatt indicator on remote, garage-door pulse on controller
 const int pinEn_Pwr = 5;
 
 #else
