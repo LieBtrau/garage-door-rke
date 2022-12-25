@@ -13,6 +13,7 @@
 #include "ESPAsyncWebServer.h"
 #include "SPIFFS.h"
 #include "wifi_credentials.h"
+#include "constants.h"
 
 static bool isAccessGranted=false;
 static AsyncWebServer server(80);  // server on port 80
@@ -25,7 +26,6 @@ static AsyncWebServer server(80);  // server on port 80
  */
 static String processor(const String &var)
 {
-  Serial.println(var);
   if (var == "DOOR_STATE")
   {
     return isAccessGranted ? "open" : "blijft gesloten";
@@ -40,6 +40,7 @@ static String processor(const String &var)
  */
 static void action(AsyncWebServerRequest *request)
 {
+  isAccessGranted = false;
   int params = request->params();
   for (int i = 0; i < params; i++)
   {
@@ -50,6 +51,11 @@ static void action(AsyncWebServerRequest *request)
     }
   }
   request->send(SPIFFS, "/door.html", String(), false, processor);
+  if(isAccessGranted)
+  {
+    authenticationOkAction();
+  }
+  isAccessGranted = false;
 }
 
 bool webserver_setup()

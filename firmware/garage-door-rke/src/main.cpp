@@ -40,9 +40,8 @@ void showArray(byte *data, byte len)
 
 void setup()
 {
-  pinMode(pinEn_Pwr, OUTPUT);
-  digitalWrite(pinEn_Pwr, HIGH);
-
+  presetup();
+  
   // Init serial port
   Serial.begin(115200);
   while (!Serial)
@@ -69,17 +68,8 @@ void setup()
       delay(1000);
     }
   }
-  #if REMOTE == 0
-  //Init web server : for garage-controller only
-  if(!webserver_setup())
-  {
-    while(true)
-    {
-      Serial.println("Web server init failed.");
-      delay(1000);
-    }
-  }
-  #endif
+
+  postsetup();
 
   Serial.println("Ready to rumble.");
 }
