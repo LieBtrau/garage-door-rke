@@ -15,8 +15,13 @@ static uint8_t buf[BUFF_SIZE];
 
 void authenticationOkAction()
 {
-    digitalWrite(pinRST_RADIO, LOW); // Light green LED && reset radio.
-    delay(500);
+    // for (int i = 0; i < 3; i++)
+    // {
+    //     digitalWrite(pinRST_RADIO, LOW); // Light green LED && reset radio.
+    //     delay(150);
+    //     digitalWrite(pinRST_RADIO, HIGH);
+    //     delay(150);
+    // }
 }
 
 static void powerOff()
@@ -45,6 +50,8 @@ void postsetup()
     const int R5 = 3300;  // ohm
     const int R6 = 10000; // ohm
 
+    LoRa.setTxPower(0);
+
     // Get ADC-calibration data
     ESP_ERROR_CHECK(esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP));
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_6, ADC_WIDTH_BIT_12, 0, &adc_chars);
@@ -55,7 +62,7 @@ void postsetup()
     // Do the ADC-measurement
     int voltage_sum = 0;
 
-    //Average the voltage over a number of ADC-samples
+    // Average the voltage over a number of ADC-samples
     const int SAMPLE_COUNT = 10;
     for (int i = 0; i < SAMPLE_COUNT; i++)
     {
@@ -65,7 +72,7 @@ void postsetup()
         }
     }
     double average = voltage_sum / SAMPLE_COUNT;
-    
+
     int battery_voltage = average * (R5 + R6) / R5;
     Serial.printf("sampled battery voltage = %dmV\n", battery_voltage);
     if (battery_voltage < MIN_BAT_VOLTAGE)
@@ -73,8 +80,11 @@ void postsetup()
         digitalWrite(pinRedLED, HIGH);
     }
 
-    //Disable ADC to save some power
+    // Disable ADC to save some power
     digitalWrite(pinEn_ADC, LOW);
+
+    // Send authentication request
+    client_2pap.startAuthentication();
 }
 
 bool setupKryptoKnight()
