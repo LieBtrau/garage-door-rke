@@ -4,6 +4,9 @@
 #include "sodium.h"
 #include <LoRa.h>
 
+//ESP-IDF has an option to set this, but we're using PlatformIO.
+#define CONFIG_LOG_MAXIMUM_LEVEL ESP_LOG_DEBUG
+
 //Application layer : Kryptoknight
 const uint32_t SERVER_ID = 0x00697960; //!< 32-bit server address
 typedef struct

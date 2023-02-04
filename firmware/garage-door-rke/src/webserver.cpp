@@ -15,6 +15,8 @@
 #include "wifi_credentials.h"
 #include "constants.h"
 
+static const char* TAG = "WebServer";
+
 static bool isAccessGranted=false;
 static AsyncWebServer server(80);  // server on port 80
 
@@ -63,7 +65,7 @@ bool webserver_setup()
   Serial.begin(115200);
   if (!SPIFFS.begin(true))
   {
-    Serial.println("An Error has occurred while mounting SPIFFS");
+    ESP_LOGE(TAG, "An Error has occurred while mounting SPIFFS");
     return false;
   }
   // Configures static IP address
@@ -72,14 +74,14 @@ bool webserver_setup()
   IPAddress subnet(255, 255, 255, 0);
   if (!WiFi.config(local_IP, gateway, subnet))
   {
-    Serial.println("STA Failed to configure");
+    ESP_LOGE(TAG, "STA Failed to configure");
     return false;
   }
   WiFi.begin(SSID, PASSWORD);
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(1000);
-    Serial.println("Connecting to WiFi..");
+    ESP_LOGD(TAG, "Connecting to WiFi..");
   }
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)

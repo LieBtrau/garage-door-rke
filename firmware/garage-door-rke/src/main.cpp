@@ -4,6 +4,8 @@
 #include <SPI.h> // include libraries
 #include "pins.h"
 #include "AsyncDelay.h"
+
+static const char* TAG = "Main";
 extern "C"
 {
 #include "bootloader_random.h"
@@ -15,8 +17,8 @@ void onReceive(int packetSize);
 
 bool radioTx(byte *packet, byte packetlength)
 {
-#ifdef DEBUG
-  Serial.printf("Device sends %dbytes.\r\n", packetlength);
+  ESP_LOGI(TAG, "Device sends %dbytes.\r\n", packetlength);
+#if LOG_LOCAL_LEVEL == ESP_LOG_VERBOSE
   showArray(packet, packetlength);
 #endif
   LoRa.beginPacket();
@@ -40,13 +42,14 @@ void showArray(byte *data, byte len)
 
 void setup()
 {
+  esp_log_level_set("*", ESP_LOG_DEBUG);
   presetup();
   
   // Init serial port
   Serial.begin(115200);
   while (!Serial)
     ;
-  Serial.printf("\r\nBuild %s\r\n", __TIMESTAMP__);
+  ESP_LOGD(TAG, "\r\nBuild %s\r\n", __TIMESTAMP__);
 
   // Init LoRa
   LoRa.setPins(pinnCS, pinRST_RADIO, pinDIO0, pinSCK, pinMOSI, pinMISO);
@@ -54,7 +57,7 @@ void setup()
   {
     while (true)
     {
-      Serial.println("LoRa init failed. Check your connections.");
+      ESP_LOGE(TAG, "LoRa init failed. Check your connections.");
       delay(1000);
     }
   }
@@ -64,12 +67,12 @@ void setup()
   {
     while (true)
     {
-      Serial.println("Kryptoknight init failed. Check your connections.");
+      ESP_LOGE(TAG, "Kryptoknight init failed. Check your connections.");
       delay(1000);
     }
   }
 
   postsetup();
 
-  Serial.println("Ready to rumble.");
+  ESP_LOGI(TAG, "Ready to rumble.");
 }

@@ -1,11 +1,14 @@
 #include "constants.h"
 #include "pins.h"
+#include "secretKey.h"
+
+static const char* TAG = "Client";
 
 #if REMOTE == 1
 #include "KryptoknightClient.h"
 #include "esp_adc_cal.h"
 
-static const ClientRecord myID = {0x002ba78c, {0xE4, 0xFF, 0x4B, 0x3C, 0x9C, 0x4D, 0x0F, 0xCD, 0xB3, 0x17, 0x8A, 0xA1, 0xE3, 0x51, 0x66, 0xEE, 0xE6, 0x1A, 0x77, 0x7C, 0x1E, 0xE1, 0x47, 0x56, 0x46, 0x73, 0x85, 0x3E, 0x81, 0x51, 0xDF, 0xB7}};
+static const ClientRecord myID = {0x002ba78c, SECRET_KEY};
 static KryptoknightClient client_2pap(myID.client_id, (byte *)myID.shared_secret_key, SERVER_ID);
 static AsyncDelay timerStartAuthentication;
 static esp_adc_cal_characteristics_t adc_chars;
@@ -74,7 +77,7 @@ void postsetup()
     double average = voltage_sum / SAMPLE_COUNT;
 
     int battery_voltage = average * (R5 + R6) / R5;
-    Serial.printf("sampled battery voltage = %dmV\n", battery_voltage);
+    ESP_LOGD(TAG, "sampled battery voltage = %dmV\n", battery_voltage);
     if (battery_voltage < MIN_BAT_VOLTAGE)
     {
         digitalWrite(pinRedLED, HIGH);
@@ -101,20 +104,20 @@ void onReceive(int packetSize)
 
     if (LoRa.readBytes(buf, min(packetSize, BUFF_SIZE)) == packetSize)
     {
-#ifdef DEBUG
-        Serial.printf("Client receives %dbytes.\r\n", packetSize);
-        showArray(buf, packetSize);
+    ESP_LOGI(TAG, "Device sends %dbytes.\r\n", packetSize);
+#if LOG_LOCAL_LEVEL == ESP_LOG_VERBOSE
+    showArray(buf, packetSize);
 #endif
         if (client_2pap.handleIncomingPacket(buf, packetSize))
         {
-            Serial.println("Authentication successful");
+            ESP_LOGD(TAG, "Authentication successful");
             authenticationOkAction();
             powerOff();
         }
     }
     else
     {
-        Serial.println("invalid message");
+        ESP_LOGE(TAG, "invalid message");
     }
 }
 
