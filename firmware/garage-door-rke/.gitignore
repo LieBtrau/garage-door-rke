@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 wifi_credentials.h
+secretKey.h
