@@ -8,6 +8,7 @@ Remote keyless entry for garage door
 ## Solution
 
 ### Hardware
+Design files in [EasyEDA](https://oshwlab.com/liebtrau/garage-door-rke)
 
 #### Remote
 A light-weight remote has been developed.  It contains :
@@ -18,6 +19,9 @@ A light-weight remote has been developed.  It contains :
 The controller is mounted near the Hörmann garage door controller, inside the garage.  It consists of:
 1. The same PCB transceiver as in the remote (RFM95 + ESP-C3).  So that design only needed to be done once.
 2. A 24V to 5V power PCB.  This PCB has an over-sized power supply so that it can also be used in other projects, e.g. for powering a Raspberry Pi.
+  * This design was more of an exercise in power supply design than being really practical.
+  * Much smaller supplies exist (TPSM84209).
+  * If you're after the least effort, then use an 7805 or one of its switching drop-in replacements.
 3. A wifi-antenna, connected to the ESP-C3-13U-4M module.
 
 The controller is mounted near the opening of the garage door to increase wireless range.  A 3m UTP-cable connects to an RJ45-terminal socket adapter from [Adafruit](https://www.adafruit.com/product/4981) or [AliExpress](https://www.aliexpress.com/item/1005001493014437.html), which makes connection to the terminal blocks of the Hörmann garage door interface.
